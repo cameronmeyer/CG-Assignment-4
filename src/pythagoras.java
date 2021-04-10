@@ -10,7 +10,7 @@ import java.awt.event.*;
 public class pythagoras extends Frame implements ActionListener
 {
 	protected MenuItem pythagoras, exit;
-	protected Menu mF, mV;
+	protected Menu menu;
 	
 	public static void main(String[] args) {new pythagoras();}
 
@@ -22,15 +22,15 @@ public class pythagoras extends Frame implements ActionListener
 			public void windowClosing(WindowEvent e) {System.exit(0);}
 		});
       
-		MenuBar mBar = new MenuBar();
-		setMenuBar(mBar);
-		mF = new Menu("Options");
-		mBar.add(mF);
+		MenuBar menuBar = new MenuBar();
+		setMenuBar(menuBar);
+		menu = new Menu("Options");
+		menuBar.add(menu);
 		
 		pythagoras = new MenuItem("Pythagoras", new MenuShortcut(KeyEvent.VK_P));
 		exit = new MenuItem("Quit", new MenuShortcut(KeyEvent.VK_Q));
-		mF.add(pythagoras);
-		mF.add(exit);
+		menu.add(pythagoras);
+		menu.add(exit);
 		
 		pythagoras.addActionListener(this);
 		exit.addActionListener(this);
@@ -41,18 +41,17 @@ public class pythagoras extends Frame implements ActionListener
 		setVisible(true);
 	}
 
-	@Override
 	public void actionPerformed(ActionEvent ae)
 	{
 		if(ae.getSource() instanceof MenuItem)
 		{
-	        MenuItem mi = (MenuItem) ae.getSource();
+	        MenuItem menuItem = (MenuItem) ae.getSource();
 	        
-	        if(mi == pythagoras)
+	        if(menuItem == pythagoras)
 	        {
-	        	// TODO: Tell program not to listen to click input until this option is selected!!
+	        	CvPythagoras.selectPythagoras();
 	        }
-	        else if(mi == exit)
+	        else if(menuItem == exit)
 	        {
 	        	System.exit(0);
 	        }
@@ -64,79 +63,121 @@ class CvPythagoras extends Canvas
 {
 	int centerX, centerY;
 	float pixelSize, rWidth = 10.0F, rHeight = 10.0F, xP = 1000000, yP;
-	float AX, AY, BX, BY;
+	static boolean pythagorasSelected = false;
 	boolean pointADone = false;
 	boolean isInit = true;
+	Vertex A = new Vertex(0, 0);
+	Vertex B = new Vertex(0, 0);
 
 	CvPythagoras()
 	{
-      addMouseListener(new MouseAdapter()
-      {
-         public void mousePressed(MouseEvent e)
-         {
-        	 Graphics g = getGraphics();
-        	 
-        	 if(pointADone)
-        	 {
-        		 BX = fx(e.getX());  
-	    		 BY = fy(e.getY());
-	    		 pointADone = false;
-	    		 repaint(); 
-        	 }
-        	 else
-        	 {
-        		 AX = fx(e.getX());  
-	    		 AY = fy(e.getY());
-	    		 pointADone = true;
-	    		 isInit = false; 
-	    		 
-	    		 repaint();
-        	 }
-         }
-      });
-   }
+		addMouseListener(new MouseAdapter()
+		{
+			public void mousePressed(MouseEvent e)
+			{
+				Graphics g = getGraphics();
+				
+				// Ensure Pythagoras was selected from the options menu before recording points
+				if(pythagorasSelected)
+				{
+					if(pointADone)
+					{
+						B.x = fx(e.getX());  
+						B.y = fy(e.getY());
+						pointADone = false;
+						repaint(); 
+					}
+					else
+					{
+						A.x = fx(e.getX());  
+						A.y = fy(e.getY());
+						pointADone = true;
+						isInit = false; 
+    	    		 
+						repaint();
+					} 
+				}
+			}
+		});
+	}
+	
+	// Call when Pythagoras was selected from the options menu
+	public static void selectPythagoras() { pythagorasSelected = true; }
 
-   int iX(float x) {return Math.round(centerX + x / pixelSize);}
-   int iY(float y) {return Math.round(centerY - y / pixelSize);}
-   float fx(int x) {return (x - centerX) * pixelSize;}
-   float fy(int y) {return (centerY - y) * pixelSize;}
+	int iX(float x) {return Math.round(centerX + x / pixelSize);}
+	int iY(float y) {return Math.round(centerY - y / pixelSize);}
+	float fx(int x) {return (x - centerX) * pixelSize;}
+	float fy(int y) {return (centerY - y) * pixelSize;}
 
-   public void paint(Graphics g)
-   {
-	  Dimension d = getSize();
-	  int maxX = d.width - 1, maxY = d.height - 1;
-	  pixelSize = Math.max(rWidth / maxX, rHeight / maxY);
-	  centerX = maxX / 2; centerY = maxY / 2;
-      
-	  //Calculate points C and D based on the vector perpendicular to AB
-	  float CX = BX + (AY - BY);
-	  float CY = BY + (BX - AX);  
-	  float DX = AX + (AY - BY);
-	  float DY = AY + (BX - AX);
+	public void paint(Graphics g)
+	{
+		Dimension d = getSize();
+		int maxX = d.width - 1, maxY = d.height - 1;
+		pixelSize = Math.max(rWidth / maxX, rHeight / maxY);
+		centerX = maxX / 2; centerY = maxY / 2;
 
-	  if(!isInit)
-	  {
-		 //g.drawString("A", iX(AX)-3, iY(AY)-3);
-		 //g.fillOval(iX(AX)-3, iY(AY)-3, 6, 6);
-	  
-		 if(!pointADone)
-		 {
-			 //Draw vertices of square
-			 //g.fillOval(iX(BX)-3, iY(BY)-3, 6, 6);
-			 //g.fillOval(iX(CX)-3, iY(CY)-3, 6, 6);
-			 //g.fillOval(iX(DX)-3, iY(DY)-3, 6, 6);
-      
-			 //Label points
-			 //g.drawString("B", iX(BX)-3, iY(BY)-3);
-			 //g.drawString("C", iX(CX)-3, iY(CY)-3);
-			 //g.drawString("D", iX(DX)-3, iY(DY)-3);
-      
-			 //Draw edges of square
-			 g.drawLine(iX(AX), iY(AY), iX(BX), iY(BY)); //A to B
-			 g.drawLine(iX(BX), iY(BY), iX(CX), iY(CY)); //B to C
-			 g.drawLine(iX(CX), iY(CY), iX(DX), iY(DY)); //C to D
-			 g.drawLine(iX(DX), iY(DY), iX(AX), iY(AY)); //D to A
-		 }
-	  }
-   }
+		if(!isInit)
+		{
+			if(!pointADone)
+			{
+				//Draw base of square using points A and B given by the user
+				g.drawLine(iX(A.x), iY(A.y), iX(B.x), iY(B.y)); //A to B
+				drawSquare(A, B, g); // Begin recursion with a square
+			}
+		}
+	}
+	
+	public void drawSquare(Vertex A, Vertex B, Graphics g)
+	{
+		Vertex C = new Vertex(0, 0);
+		Vertex D = new Vertex(0, 0);
+		
+		// Calculate points C and D of square perpendicular to A and B
+		C.x = B.x + (A.y - B.y);
+		C.y = B.y + (B.x - A.x);  
+		D.x = A.x + (A.y - B.y);
+		D.y = A.y + (B.x - A.x);
+		
+		// Only need to draw remaining 3 sides of square
+		g.drawLine(iX(B.x), iY(B.y), iX(C.x), iY(C.y)); //B to C
+		g.drawLine(iX(C.x), iY(C.y), iX(D.x), iY(D.y)); //C to D -- this line acts as base of the triangle
+		g.drawLine(iX(D.x), iY(D.y), iX(A.x), iY(A.y)); //D to A
+		
+		drawTriangle(C, D, g); // Draw a triangle on top of the square
+	}
+	
+	public void drawTriangle(Vertex C, Vertex D, Graphics g)
+	{
+		// Calculate third point of 45 45 90 right triangle
+		Vertex E = new Vertex(0, 0);	
+		E.x = (C.x - C.y + D.x + D.y) / 2;
+		E.y = (C.x + C.y - D.x + D.y) / 2;
+		
+		// Only need to draw remaining 2 sides of triangle -- each will be a base to a new square
+		g.drawLine(iX(C.x), iY(C.y), iX(E.x), iY(E.y)); //C to E
+		g.drawLine(iX(D.x), iY(D.y), iX(E.x), iY(E.y)); //D to E
+		
+		// If points are far enough apart, recursively draw two more squares
+		if(distance(C, E) > 0.1f)
+		{
+			drawSquare(E, C, g);
+			drawSquare(D, E, g);
+		}
+	}
+	
+	public float distance(Vertex P, Vertex Q)
+	{
+		// Return the distance between two points
+		return (float) Math.sqrt(Math.pow((Q.y - P.y), 2) + Math.pow((Q.x - P.x), 2));
+	}
+}
+
+class Vertex
+{
+	float x, y;
+	Vertex(float x, float y)
+	{
+		this.x = x;
+		this.y = y;
+	}
 }
